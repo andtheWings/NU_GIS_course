@@ -1,0 +1,58 @@
+---
+title: "PH425 Written Assignment #1"
+date: today
+author: Daniel P. Hall Riggins
+format: docx
+bibliography: references.bib
+---
+
+## Overview
+
+@weissIndirectEffectsCOVID192021 wrote their paper during the first year of the COVID-19 pandemic in an attempt to estimate its secondary consequences on African continental efforts to combat malaria. 
+They used a sophisticated series of models to estimate interconnected variables including regional parasite burden, insecticide-treated net coverage, and anti-malarial drug coverage with the ultimate goal of estimating case counts and mortality. 
+They hypothesized that COVID-19 led to disruption in the global community's ability to distribute nets and medicine leading to increased case counts and deaths attributable to Malaria.
+
+## Data Used
+
+The authors drew from a plethora of different data sources to make their estimates:
+
+- Insecticide-Treated Nets (ITN):
+    - Stock: 
+        - Alliance for Malaria Prevention's Net Mapping Project
+    - Distribution: 
+        - National Malaria Control Programmes
+        - African Leaders Malaria Alliance
+    - Ownership: 
+        - Demographic and Health Surveys Program (DHS)
+- Anti-Malarial Coverage:
+    - Treatment Seeking: 
+        - DHS
+        - Malaria Indicator Surveys
+        - Multiple Indicator Cluster Surveys
+    - Drug Efficacy:
+        - Worldwide Antimalarial Resistance Network
+- Parasite Burden: 
+    - Malaria Atlas Project
+
+## Methods
+
+The primary unit of analysis for variables was 5x5 km geospatial grid covering the continent of Africa. 
+The authors used a series of Bayesian geostatistical models to estimate each parameter in the model.
+
+Inputs on ITN stock, distribution, and usage were combined to estimate ITN coverage leading into 2020. 
+Anti-malarial drug seeking, type, and efficacy inputs were combined to estimated anti-malarial coverage leading into 2020. 
+The authors generated counterfactual scenarios based on proportional reductions of ITN/anti-malarial coverage at 25, 50, or 75% of their estimations.
+They combined these counterfactual scenarios with data on local parasite burden plus other geospatial covariates to estimate case-fatality ratios for each counterfactual.
+The ratios were rescaled to align with World Malaria Report's estimates of malaria cases and deaths in the year 2018.
+Cases and deaths on the 5x5 geospatial grid were aggregated into areal units of African countries for ease of interpretation.
+
+## Results
+
+In counterfactual scenarios where ITN or anti-malarial coverage were decreased by 75% from their baseline, the authors estimated around twice as many malaria cases (in the millions) and deaths (in the thousands).
+For most African countries, anti-malarial coverage was estimated to be more effective than ITN coverage at curbing malaria incidence.
+
+## Practical/Policy Implications
+
+The results underscored the importance of maintaining ITN and anti-malarial coverage.
+To my interpretation, results like these justify easing restriction of movement for critical human resources like community health workers so that they can continue to distribute drugs and nets to people in need.
+Any increases in COVID-19 incidence resulting from such an easing need to be weighed against the benefits of decreasing malaria incidence.

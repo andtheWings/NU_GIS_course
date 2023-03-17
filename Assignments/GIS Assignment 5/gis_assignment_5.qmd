@@ -1,0 +1,72 @@
+---
+title: "GIS Assignment 5"
+format: html
+---
+
+```{r}
+library(tidyverse)
+library(sf)
+library(tmap)
+```
+
+```{r}
+supermarkets <- 
+    read_csv("data/supermarkets_geocoded.csv") |> 
+    st_as_sf(coords = c("long", "lat")) |> 
+    st_set_crs(4326) |> 
+    st_transform(3435)
+
+supermarkets
+```
+
+```{r}
+tracts <- 
+    tigris::tracts(state = 17, county = 031, year = 2010) |> 
+    st_transform(3435)
+
+tracts
+```
+```{r}
+communities <-
+    st_read("data/chicago_community_areas.kml") |> 
+    st_transform(3435)
+
+communities
+```
+
+```{r}
+community_tracts <- st_intersection(tracts, communities)
+```
+
+```{r}
+tmap_mode("view")
+
+tm_shape(tracts) +
+    tm_borders()
+```
+
+```{r}
+tm_shape(community_tracts) +
+    tm_polygons()
+```
+
+```{r}
+dists <- st_distance(supermarkets, community_tracts)
+
+dim(dists)
+
+dists[2, 6]
+```
+
+```{r}
+community_tracts
+
+library(fasterize)
+
+r <- raster(community_tracts)
+
+community_tracts_raster <- terra::rasterize(community_tracts, r)
+
+plot(community_tracts_raster)
+```
+

@@ -1,0 +1,61 @@
+---
+title: "GIS Assignment #3"
+author: "Daniel P. Hall Riggins"
+format: docx
+---
+
+```{r}
+#| 
+library(tidyverse)
+library(sf)
+library(tmap)
+```
+
+```{r}
+counties <- st_read(here::here("EsriPress", "GTKAGPro", "HealthStudy", "Data", "us_cnty_enc.shp"))
+obesity <- st_read(here::here("EsriPress", "GTKAGPro", "HealthStudy", "Data", "Obesity_Prevalence.dbf"))
+food_deserts <- 
+    st_read(here::here("EsriPress", "GTKAGPro", "HealthStudy", "Data", "IL_food_deserts.shp")) |> 
+    filter(LILATracts == 1)
+
+IL_counties_obesity <- 
+    counties |> 
+    filter(STATE_NAME == "Illinois") |> 
+    full_join(obesity, by = c("FIPS_CODE" = "FIPS_Code"))
+
+glimpse(IL_counties_obesity)
+```
+
+```{r}
+IL_counties_obesity |> 
+    summarise(
+        total_obese_2010 = sum(Number10),
+        avg_perc_obese_2010 = mean(Percent10)
+    ) |>  
+    as_tibble() |> 
+    select(-geometry)
+```
+
+```{r}
+food_desert_counts <-
+    full_join(select(as_tibble(food_deserts), -geometry), IL_counties_obesity, by = c("County" = "NAME")) |> 
+    group_by(FIPS_CODE) |> 
+    summarize(
+         total_deserts = sum(LILATracts)
+    ) |> 
+    mutate(
+        total_deserts =
+            case_match(
+                total_deserts,
+                NA ~ 0,
+                .default = total_deserts
+            )
+    ) 
+
+new_food_desert_counts <- full_join(IL_counties_obesity, food_desert_counts)
+```
+
+```{r}
+st_write(new_food_desert_counts, here::here("EsriPress", "GTKAGPro", "HealthStudy", "Data", "food_desert_counts.shp"), append=FALSE)
+```
+

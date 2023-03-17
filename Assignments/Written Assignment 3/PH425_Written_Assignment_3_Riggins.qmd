@@ -1,0 +1,6 @@
+---
+title: "PH425 Written Assignment #3"
+date: today
+author: Daniel P. Hall Riggins
+format: docx
+---

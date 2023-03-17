@@ -1,0 +1,166 @@
+
+
+## Libraries
+
+```{r}
+library(sf)
+library(tidyverse)
+library(tmap)
+library(tidygeocoder)
+```
+
+## Part 7A
+
+<!-- ### I/O -->
+
+<!-- Read layers of the geodatabase and load needed ones. -->
+
+<!-- ```{r} -->
+<!-- gdb_file_path <- here::here("EsriPress", "GTKAGPro", "RetailSiteStudy", "RetailSiteStudy.gdb") -->
+
+<!-- st_layers(gdb_file_path) -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!-- bicycle_stations <- st_read(gdb_file_path, layer = "bicycle_stations") -->
+<!-- proposed_bike_lanes <- st_read(gdb_file_path, layer = "proposed_bike_lanes") -->
+<!-- existing_bike_lanes <- st_read(gdb_file_path, layer = "existing_bike_lanes") -->
+<!-- commercial_landuse <- st_read(gdb_file_path, layer = "commercial_landuse") -->
+<!-- roads <- st_read(gdb_file_path, layer = "roads") -->
+
+<!-- median_household_income <- st_read(gdb_file_path, layer = "median_household_income") -->
+<!-- census_block_demographics <- st_read(gdb_file_path, layer = "census_block_demographics") -->
+
+<!-- glimpse(median_household_income) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- glimpse(census_block_demographics) -->
+<!-- ``` -->
+
+<!-- Join median household income table to the census block demographics simple feature collection. -->
+
+<!-- ```{r} -->
+<!-- #| warning: false -->
+<!-- census_block_demo_and_income <- full_join(census_block_demographics, median_household_income, by = "GEOID") -->
+<!-- ``` -->
+
+<!-- ### Visualization -->
+
+<!-- Use "tmap" package to visualize census blocks colored by income category. -->
+
+<!-- ```{r} -->
+<!-- tmap_mode("view") -->
+<!-- tmap_options(check.and.fix = TRUE) -->
+
+<!-- map_1 <- -->
+<!--     tm_shape(census_block_demo_and_income) + -->
+<!--     tm_fill( -->
+<!--         "Median_HHI", -->
+<!--         title = "Household Income", -->
+<!--         breaks = c(0, 63250, 97800, 156950, 250001, 1000000000), -->
+<!--         labels = c("Low Income", "Moderate Income", "Moderately High Income", "High Income", "Very High Income") -->
+<!--     ) + -->
+<!--     tm_borders() -->
+
+<!-- map_1 -->
+<!-- ``` -->
+
+<!-- ## Part 7B -->
+
+<!-- ```{r} -->
+<!-- retail_site_prospects <-  -->
+<!--     read_csv( -->
+<!--         here::here( -->
+<!--             "EsriPress",  -->
+<!--             "GTKAGPro",  -->
+<!--             "RetailSiteStudy",  -->
+<!--             "retail_site_prospects.csv" -->
+<!--         ) -->
+<!--     ) |>  -->
+<!--     mutate( -->
+<!--         CITY =  -->
+<!--             case_when( -->
+<!--                 is.na(CITY) ~ "Houston", -->
+<!--                 TRUE ~ CITY -->
+<!--             ), -->
+<!--         STATE = -->
+<!--             case_when( -->
+<!--                 is.na(STATE) ~ "TX", -->
+<!--                 TRUE ~ STATE -->
+<!--             ) -->
+<!--     ) -->
+
+<!-- retail_site_prospects$ADDRESS[retail_site_prospects$OBJECTID == 6] <- "2212 Mangum Rd" -->
+<!-- retail_site_prospects$ADDRESS[retail_site_prospects$OBJECTID == 7] <- "4900 Travis Street" -->
+<!-- retail_site_prospects$ADDRESS[retail_site_prospects$OBJECTID == 10] <- "5761 Cullen Blvd" -->
+<!-- retail_site_prospects$CITY[retail_site_prospects$OBJECTID == 11] <- "Bellaire" -->
+
+<!-- glimpse(retail_site_prospects) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- retail_site_prospects_geocoded <- -->
+<!--     retail_site_prospects |>  -->
+<!--     opencage::oc_forward_df(placename = full_address) |>  -->
+<!--     st_as_sf(coords = c("oc_lng", "oc_lat")) |>  -->
+<!--     st_set_crs(4326) -->
+
+<!-- retail_site_prospects_geocoded -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+
+
+<!-- # st_write(retail_site_prospects_geocoded, here::here("GIS Assignment 4", "retail_site_prospects.gpkg")) -->
+
+<!-- retail_site_prospects_geocoded -->
+<!-- ``` -->
+
+## On Your Own
+
+```{r}
+community_areas <- st_read("GIS Assignment 4/Boundaries - Community Areas (current)/geo_export_dcb4af1a-1fd7-4e63-906f-6af79caab2b7.shp")
+    
+supermarkets <- 
+    read_csv("GIS Assignment 4/chainsupermarketsChicago2011.csv") |> 
+    mutate(
+        full_address = paste(
+            ADDRESS, CITY, STATE, ZIP, 
+            sep = ", "
+        )
+    )
+
+glimpse(supermarkets)
+```
+
+```{r}
+supermarkets_geocoded <-
+    supermarkets |>
+    geocode(
+        address = full_address,
+        method = "arcgis",
+        full_results = TRUE
+    )
+
+supermarkets_geocoded_sf <-
+    supermarkets_geocoded |> 
+    st_as_sf(coords = c("long", "lat")) |> 
+    st_set_crs(4326)
+
+write_csv(supermarkets_geocoded, "GIS Assignment 4/supermarkets_geocoded.csv")
+```
+
+```{r}
+tmap_mode(mode = "view")
+
+
+tm_shape(community_areas) +
+    tm_borders() +
+    tm_shape(supermarkets_geocoded_sf) +
+    tm_dots("COMPANY_NA", title = "Company", size = 0.1) +
+    tm_layout("Chain Supermarkets of Chicago, 2011")
+```
+

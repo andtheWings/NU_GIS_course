@@ -1,0 +1,177 @@
+
+```{r}
+tar_load(cold_death_dataset)
+
+cold_death_dataset |> 
+    ggplot(aes(x = case_count)) +
+    geom_bar()
+```
+
+
+```{r}
+cold_death_dataset |>
+    as_tibble() |> 
+    select(where(is.numeric)) |> 
+    corrr::correlate() |> 
+    select(term, case_count, area_sqmi) |> 
+    #select(term, case_count, avg_distance_to_warming, e_totpop, e_minrty, e_pov150) |> #, avg_distance_to_warming, ep_minrty, ep_groupq, e_otherrace, ep_mobile, e_aian) |> 
+    arrange(desc(abs(case_count))) #|> 
+    # filter(
+    #     abs(avg_distance_to_warming) < 0.05 &
+    #         abs(e_totpop) < 0.05 &
+    #         abs(e_minrty) < 0.05
+    # )
+```
+
+
+```{r}
+cold_deaths |> 
+    as_tibble() |> 
+    filter(
+        !str_detect(PRIMARYCAUSE, "HYPOTHERMIA") &
+            !str_detect(PRIMARYCAUSE, "COLD")
+    ) |> 
+    select(PRIMARYCAUSE) |> 
+    view()
+```
+
+
+```{r}
+intercept <-
+    glm(
+        case_present ~ 1,
+        data = cold_death_dataset,
+        family = binomial(link = "logit")
+    )
+
+five_var <-
+    glm(
+        case_present ~ e_daypop + avg_distance_to_warming + e_minrty + e_uninsur + e_groupq,
+        data = cold_death_dataset,
+        family = binomial(link = "logit")
+    )
+
+no_uninsur <-
+    glm(
+        case_present ~ e_daypop + avg_distance_to_warming + e_minrty + e_groupq,
+        data = cold_death_dataset,
+        family = binomial(link = "logit")
+    )
+
+no_groupq <-
+    glm(
+        case_present ~ e_daypop + avg_distance_to_warming + e_minrty + e_uninsur,
+        data = cold_death_dataset,
+        family = binomial(link = "logit")
+    )
+
+neither <-
+    glm(
+        case_present ~ e_daypop + avg_distance_to_warming + e_minrty,
+        data = cold_death_dataset,
+        family = binomial(link = "logit")
+    )
+
+percentage <-
+    glm(
+        case_present ~ e_daypop + avg_distance_to_warming + ep_minrty,
+        data = cold_death_dataset,
+        family = binomial(link = "logit")
+    )
+
+just_avg_distance <- 
+    glm(
+        case_present ~ avg_distance_to_warming,
+        data = cold_death_dataset,
+        family = binomial(link = "logit")
+    )
+
+just_daypop <- 
+    glm(
+        case_present ~ e_daypop,
+        data = cold_death_dataset,
+        family = binomial(link = "logit")
+    )
+
+just_minrty <- 
+    glm(
+        case_present ~ e_minrty,
+        data = cold_death_dataset,
+        family = binomial(link = "logit")
+    )
+
+minrty_daypop <- 
+    glm(
+        case_present ~ e_minrty + e_daypop,
+        data = cold_death_dataset,
+        family = binomial(link = "logit")
+    )
+
+compare_performance(neither, just_avg_distance, percentage, rank = FALSE, metrics = "common")
+```
+
+
+```{r}
+performance_roc(neither, intercept, just_avg_distance, percentage) |>  plot()
+```
+
+
+```{r}
+check_zeroinflation(five_var)
+```
+
+
+```{r}
+source("R/plot_rootogram.R")
+
+plot_rootogram(five_var)
+```
+
+
+```{r}
+parameters(neither, exponentiate = TRUE)
+```
+
+
+
+
+```{r}
+correlation::cor_test(as_tibble(final), x = "mean_distance", y = "obs_incidence")
+
+
+
+final |> 
+    ggplot(aes(x = mean_distance, y = obs_incidence)) +
+    geom_point()
+    ```
+
+
+```{r}
+sp_diag(final$case_count, final)
+```
+
+```{r}
+weights_matrix <- shape2mat(final)
+car_parts <- prep_car_data(weights_matrix)
+
+fit <- 
+    stan_car(
+        case_count ~ offset(log(POPULATION_2020)),
+        data = final,
+        car_parts = car_parts,
+        family = poisson(),
+    )
+```
+
+
+Here are those cases aggregated to the census tract level:
+
+```{r}
+cases_present <- filter(cold_death_dataset, case_present == TRUE)
+cases_absent <- filter(cold_death_dataset, case_present == FALSE)
+
+tm_shape(cases_present) +
+    tm_polygons(col = "#e34a33", alpha = 0.6) +
+    tm_shape(cases_absent) +
+    tm_polygons(col = "#fef0d9", alpha = 0.6)
+```
